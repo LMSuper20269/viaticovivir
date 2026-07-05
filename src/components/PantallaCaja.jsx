@@ -6,7 +6,7 @@ export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaj
     <div>
       <div className="header">
         <p className="subt">Caja activa · desde {formatFecha(caja.fecha_inicio)}</p>
-        <p className="titulo">{caja.descripcion || 'Gastos del hogar'}</p>
+        <p className="titulo">{caja.descripcion || 'Viatico Vivir'}</p>
         <div className="fila-stats">
           <div className="stat-card">
             <p className="label">Monto inicial</p>

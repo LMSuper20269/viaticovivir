@@ -134,7 +134,7 @@ export default function App() {
       <div>
         <div className="header" style={{ borderRadius: '0 0 20px 20px' }}>
           <p className="subt">Hola, {persona}</p>
-          <p className="titulo">No hay una caja activa</p>
+          <p className="titulo">Viatico Vivir</p>
         </div>
         <div className="contenedor" style={{ paddingTop: 24 }}>
           <button className="btn-principal" onClick={() => setVista('nueva-caja')}>

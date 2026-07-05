@@ -19,7 +19,7 @@ export default function PantallaBienvenida({ onConfirmar }) {
   return (
     <div className="bienvenida">
       <div style={{ fontSize: 52 }}>💰</div>
-      <h1>Gastos del Hogar</h1>
+      <h1>Viatico Vivir</h1>
       <p>Elegí tu nombre e ingresá la clave para entrar.</p>
 
       <div className="selector-usuario">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 export default function PantallaNewCaja({ onVolver, onGuardar }) {
-  const [descripcion, setDescripcion] = useState('Gastos del hogar')
+  const [descripcion, setDescripcion] = useState('Viatico Vivir')
   const [monto, setMonto] = useState('')
   const [fecha, setFecha] = useState(hoy())
   const [guardando, setGuardando] = useState(false)
