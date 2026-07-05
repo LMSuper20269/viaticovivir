@@ -1,4 +1,4 @@
-export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto }) {
+export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onCerrarSesion }) {
   const saldoPorcentaje = Math.round((caja.saldo / caja.monto_inicial) * 100)
   const agotada = caja.saldo <= 0
 
@@ -10,9 +10,14 @@ export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaj
             <p className="subt">Caja activa · desde {formatFecha(caja.fecha_inicio)}</p>
             <p className="titulo">{caja.descripcion || 'Viatico Vivir'}</p>
           </div>
-          <button onClick={onEditarCaja} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 14, fontWeight: 600, padding: '4px 0', marginTop: 4 }}>
-            ✎ editar
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+            <button onClick={onEditarCaja} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 14, fontWeight: 600, padding: 0 }}>
+              ✎ editar
+            </button>
+            <button onClick={onCerrarSesion} style={{ background: 'none', border: 'none', color: 'var(--gris)', fontSize: 12, padding: 0 }}>
+              ⎋ salir
+            </button>
+          </div>
         </div>
         <div className="fila-stats">
           <div className="stat-card">

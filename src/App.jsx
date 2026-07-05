@@ -48,6 +48,11 @@ export default function App() {
     if (data) setGastos(data)
   }
 
+  function cerrarSesion() {
+    localStorage.removeItem('gastos_persona')
+    setPersona('')
+  }
+
   function confirmarPersona(nombre) {
     localStorage.setItem('gastos_persona', nombre)
     setPersona(nombre)
@@ -132,8 +137,15 @@ export default function App() {
     return (
       <div>
         <div className="header" style={{ borderRadius: '0 0 20px 20px' }}>
-          <p className="subt">Hola, {persona}</p>
-          <p className="titulo">Viatico Vivir</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p className="subt">Hola, {persona}</p>
+              <p className="titulo">Viatico Vivir</p>
+            </div>
+            <button onClick={cerrarSesion} style={{ background: 'none', border: 'none', color: 'var(--gris)', fontSize: 12, padding: 0 }}>
+              ⎋ salir
+            </button>
+          </div>
         </div>
         <div className="contenedor" style={{ paddingTop: 24 }}>
           <p style={{ color: 'var(--gris)', marginBottom: 16 }}>No hay una caja activa.</p>
@@ -157,6 +169,7 @@ export default function App() {
       onVerArchivo={() => setVista('archivo')}
       onEditarCaja={() => setVista('editar-caja')}
       onEliminarGasto={eliminarGasto}
+      onCerrarSesion={cerrarSesion}
     />
   )
 }
