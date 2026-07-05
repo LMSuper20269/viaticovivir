@@ -5,6 +5,7 @@ import PantallaCaja from './components/PantallaCaja'
 import PantallaCargarGasto from './components/PantallaCargarGasto'
 import PantallaNewCaja from './components/PantallaNewCaja'
 import PantallaArchivo from './components/PantallaArchivo'
+import PantallaEditarCaja from './components/PantallaEditarCaja'
 
 export default function App() {
   const [persona, setPersona] = useState(() => localStorage.getItem('gastos_persona') || '')
@@ -17,23 +18,18 @@ export default function App() {
   useEffect(() => {
     if (!persona) return
     cargarDatos()
-
     const canal = supabase
       .channel('gastos-cambios')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cajas' }, cargarDatos)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'gastos' }, cargarGastos)
       .subscribe()
-
     return () => supabase.removeChannel(canal)
   }, [persona])
 
   async function cargarDatos() {
     setCargando(true)
     const { data: cajas } = await supabase
-      .from('cajas')
-      .select('*')
-      .order('creado_en', { ascending: false })
-
+      .from('cajas').select('*').order('creado_en', { ascending: false })
     if (cajas) {
       setCajaActiva(cajas.find(c => c.estado === 'activa') || null)
       setCajasArchivadas(cajas.filter(c => c.estado === 'archivada'))
@@ -44,19 +40,11 @@ export default function App() {
 
   async function cargarGastos() {
     const { data: cajas } = await supabase
-      .from('cajas')
-      .select('id')
-      .eq('estado', 'activa')
-      .limit(1)
-
+      .from('cajas').select('id').eq('estado', 'activa').limit(1)
     if (!cajas || cajas.length === 0) { setGastos([]); return }
-
     const { data } = await supabase
-      .from('gastos')
-      .select('*')
-      .eq('caja_id', cajas[0].id)
+      .from('gastos').select('*').eq('caja_id', cajas[0].id)
       .order('creado_en', { ascending: false })
-
     if (data) setGastos(data)
   }
 
@@ -67,67 +55,78 @@ export default function App() {
 
   async function crearCaja({ descripcion, monto, fecha }) {
     await supabase.from('cajas').insert({
-      descripcion,
-      monto_inicial: monto,
-      saldo: monto,
-      fecha_inicio: fecha,
-      estado: 'activa',
+      descripcion, monto_inicial: monto, saldo: monto, fecha_inicio: fecha, estado: 'activa',
     })
+    await cargarDatos()
+    setVista('caja')
+  }
+
+  async function editarCaja(cajaId, cambios) {
+    await supabase.from('cajas').update(cambios).eq('id', cajaId)
     await cargarDatos()
     setVista('caja')
   }
 
   async function cargarGasto({ motivo, monto, persona: quien }) {
     if (!cajaActiva) return
-
-    await supabase.from('gastos').insert({
-      caja_id: cajaActiva.id,
-      motivo,
-      monto,
-      persona: quien,
-    })
-
+    await supabase.from('gastos').insert({ caja_id: cajaActiva.id, motivo, monto, persona: quien })
     const nuevoSaldo = Math.max(0, Number(cajaActiva.saldo) - monto)
     await supabase.from('cajas').update({ saldo: nuevoSaldo }).eq('id', cajaActiva.id)
-
     await cargarDatos()
     setVista('caja')
   }
 
+  async function eliminarGasto(gasto) {
+    const ok = window.confirm(`¿Eliminar el gasto "${gasto.motivo}" de $${Number(gasto.monto).toLocaleString('es-AR')}?`)
+    if (!ok || !cajaActiva) return
+    await supabase.from('gastos').delete().eq('id', gasto.id)
+    const nuevoSaldo = Number(cajaActiva.saldo) + Number(gasto.monto)
+    await supabase.from('cajas').update({ saldo: nuevoSaldo }).eq('id', cajaActiva.id)
+    await cargarDatos()
+  }
+
   async function cerrarCaja() {
-    const confirmado = window.confirm('¿Cerrar esta caja y archivarla? No se podrán cargar más gastos en ella.')
-    if (!confirmado || !cajaActiva) return
+    const ok = window.confirm('¿Cerrar esta caja y archivarla?')
+    if (!ok || !cajaActiva) return
     await supabase.from('cajas').update({ estado: 'archivada' }).eq('id', cajaActiva.id)
     await cargarDatos()
     setVista('caja')
   }
 
+  async function reabrirCaja(caja) {
+    if (cajaActiva) {
+      const ok = window.confirm('Ya hay una caja activa. ¿Cerrarla y reabrir esta?')
+      if (!ok) return
+      await supabase.from('cajas').update({ estado: 'archivada' }).eq('id', cajaActiva.id)
+    }
+    await supabase.from('cajas').update({ estado: 'activa' }).eq('id', caja.id)
+    await cargarDatos()
+    setVista('caja')
+  }
+
+  async function eliminarCaja(caja) {
+    const ok = window.confirm(`¿Eliminar la caja "${caja.descripcion}"? Esto borra también todos sus gastos.`)
+    if (!ok) return
+    await supabase.from('cajas').delete().eq('id', caja.id)
+    await cargarDatos()
+  }
+
   if (!persona) return <PantallaBienvenida onConfirmar={confirmarPersona} />
   if (cargando) return <div style={{ color: '#aaa', padding: 40, textAlign: 'center' }}>Cargando...</div>
 
-  if (vista === 'nuevo-gasto' && cajaActiva) {
-    return <PantallaCargarGasto
-      saldoDisponible={Number(cajaActiva.saldo)}
-      persona={persona}
-      onVolver={() => setVista('caja')}
-      onGuardar={cargarGasto}
-    />
-  }
+  if (vista === 'nuevo-gasto' && cajaActiva)
+    return <PantallaCargarGasto saldoDisponible={Number(cajaActiva.saldo)} persona={persona}
+      onVolver={() => setVista('caja')} onGuardar={cargarGasto} />
 
-  if (vista === 'nueva-caja') {
-    return <PantallaNewCaja
-      onVolver={() => setVista('caja')}
-      onGuardar={crearCaja}
-    />
-  }
+  if (vista === 'nueva-caja')
+    return <PantallaNewCaja onVolver={() => setVista('caja')} onGuardar={crearCaja} />
 
-  if (vista === 'archivo') {
-    return <PantallaArchivo
-      cajasArchivadas={cajasArchivadas}
-      onVolver={() => setVista('caja')}
-      onVerDetalle={() => {}}
-    />
-  }
+  if (vista === 'editar-caja' && cajaActiva)
+    return <PantallaEditarCaja caja={cajaActiva} onVolver={() => setVista('caja')} onGuardar={editarCaja} />
+
+  if (vista === 'archivo')
+    return <PantallaArchivo cajasArchivadas={cajasArchivadas}
+      onVolver={() => setVista('caja')} onReabrir={reabrirCaja} onEliminarCaja={eliminarCaja} />
 
   if (!cajaActiva) {
     return (
@@ -137,9 +136,8 @@ export default function App() {
           <p className="titulo">Viatico Vivir</p>
         </div>
         <div className="contenedor" style={{ paddingTop: 24 }}>
-          <button className="btn-principal" onClick={() => setVista('nueva-caja')}>
-            + Crear nueva caja
-          </button>
+          <p style={{ color: 'var(--gris)', marginBottom: 16 }}>No hay una caja activa.</p>
+          <button className="btn-principal" onClick={() => setVista('nueva-caja')}>+ Crear nueva caja</button>
           {cajasArchivadas.length > 0 && (
             <button className="btn-secundario" style={{ marginTop: 10 }} onClick={() => setVista('archivo')}>
               📁 Ver cajas anteriores
@@ -157,6 +155,8 @@ export default function App() {
       onAgregarGasto={() => setVista('nuevo-gasto')}
       onCerrarCaja={cerrarCaja}
       onVerArchivo={() => setVista('archivo')}
+      onEditarCaja={() => setVista('editar-caja')}
+      onEliminarGasto={eliminarGasto}
     />
   )
 }

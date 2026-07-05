@@ -1,10 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../supabaseClient'
 
 export default function PantallaCargarGasto({ saldoDisponible, onVolver, onGuardar, persona }) {
   const [motivo, setMotivo] = useState('')
   const [monto, setMonto] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
+  const [motivosGuardados, setMotivosGuardados] = useState([])
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false)
+
+  useEffect(() => {
+    cargarMotivos()
+  }, [])
+
+  async function cargarMotivos() {
+    const { data } = await supabase
+      .from('gastos')
+      .select('motivo')
+      .order('creado_en', { ascending: false })
+
+    if (data) {
+      const unicos = [...new Set(data.map(g => g.motivo))]
+      setMotivosGuardados(unicos)
+    }
+  }
+
+  const sugerencias = motivo.length > 0
+    ? motivosGuardados.filter(m => m.toLowerCase().includes(motivo.toLowerCase()) && m !== motivo)
+    : motivosGuardados
+
+  function elegirSugerencia(m) {
+    setMotivo(m)
+    setMostrarSugerencias(false)
+    setError('')
+  }
 
   async function confirmar() {
     const montoNum = Number(monto)
@@ -37,9 +66,29 @@ export default function PantallaCargarGasto({ saldoDisponible, onVolver, onGuard
             type="text"
             placeholder="Ej: Supermercado, Gas, Farmacia..."
             value={motivo}
-            onChange={e => { setMotivo(e.target.value); setError('') }}
+            onChange={e => { setMotivo(e.target.value); setError(''); setMostrarSugerencias(true) }}
+            onFocus={() => setMostrarSugerencias(true)}
             autoFocus
           />
+
+          {mostrarSugerencias && sugerencias.length > 0 && (
+            <div style={{ border: '1px solid var(--borde)', borderRadius: 10, marginTop: 4, background: 'var(--fondo-card)', maxHeight: 200, overflowY: 'auto' }}>
+              {motivosGuardados.length > 0 && motivo.length === 0 && (
+                <p style={{ color: 'var(--gris)', fontSize: 11, padding: '6px 14px 2px', margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Usados antes
+                </p>
+              )}
+              {sugerencias.map(s => (
+                <div
+                  key={s}
+                  onClick={() => elegirSugerencia(s)}
+                  style={{ padding: '10px 14px', fontSize: 15, color: 'var(--blanco)', borderBottom: '1px solid var(--borde)', cursor: 'pointer' }}
+                >
+                  {s}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="campo">
@@ -49,7 +98,7 @@ export default function PantallaCargarGasto({ saldoDisponible, onVolver, onGuard
             min="0"
             placeholder="Ej: 15000"
             value={monto}
-            onChange={e => { setMonto(e.target.value); setError('') }}
+            onChange={e => { setMonto(e.target.value); setError(''); setMostrarSugerencias(false) }}
           />
         </div>
 

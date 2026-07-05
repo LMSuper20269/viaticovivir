@@ -1,12 +1,19 @@
-export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo }) {
+export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto }) {
   const saldoPorcentaje = Math.round((caja.saldo / caja.monto_inicial) * 100)
   const agotada = caja.saldo <= 0
 
   return (
     <div>
       <div className="header">
-        <p className="subt">Caja activa · desde {formatFecha(caja.fecha_inicio)}</p>
-        <p className="titulo">{caja.descripcion || 'Viatico Vivir'}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p className="subt">Caja activa · desde {formatFecha(caja.fecha_inicio)}</p>
+            <p className="titulo">{caja.descripcion || 'Viatico Vivir'}</p>
+          </div>
+          <button onClick={onEditarCaja} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 14, fontWeight: 600, padding: '4px 0', marginTop: 4 }}>
+            ✎ editar
+          </button>
+        </div>
         <div className="fila-stats">
           <div className="stat-card">
             <p className="label">Monto inicial</p>
@@ -22,7 +29,6 @@ export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaj
             </p>
           </div>
         </div>
-
         <div style={{ marginTop: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ color: 'var(--gris)', fontSize: 12 }}>Gastado</span>
@@ -31,7 +37,7 @@ export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaj
           <div style={{ background: 'var(--fondo)', borderRadius: 6, height: 8, overflow: 'hidden' }}>
             <div style={{
               height: '100%',
-              width: `${100 - saldoPorcentaje}%`,
+              width: `${Math.min(100, 100 - saldoPorcentaje)}%`,
               background: agotada ? 'var(--rojo)' : saldoPorcentaje < 25 ? 'var(--rojo)' : 'var(--verde)',
               borderRadius: 6,
               transition: 'width 0.3s'
@@ -56,12 +62,20 @@ export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaj
         )}
 
         {gastos.map(g => (
-          <div key={g.id} className="gasto-fila">
-            <div>
-              <p className="gasto-motivo">{g.motivo}</p>
-              <p className="gasto-meta">{g.persona} · {formatFechaHora(g.creado_en)}</p>
+          <div key={g.id} className="gasto-fila" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p className="gasto-motivo">{g.motivo}</p>
+                <p className="gasto-meta">{g.persona} · {formatFechaHora(g.creado_en)}</p>
+              </div>
+              <p className="gasto-monto">-${Number(g.monto).toLocaleString('es-AR')}</p>
             </div>
-            <p className="gasto-monto">-${Number(g.monto).toLocaleString('es-AR')}</p>
+            <button
+              onClick={() => onEliminarGasto(g)}
+              style={{ background: 'none', border: 'none', color: 'var(--rojo)', fontSize: 12, textAlign: 'right', padding: '2px 0' }}
+            >
+              🗑 eliminar
+            </button>
           </div>
         ))}
 
