@@ -1,9 +1,12 @@
-export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onCerrarSesion }) {
+export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onCerrarSesion, onVolver }) {
   const saldoPorcentaje = Math.round((caja.saldo / caja.monto_inicial) * 100)
   const agotada = caja.saldo <= 0
 
   return (
     <div>
+      <div style={{ padding: '12px 16px 0' }}>
+        <button className="btn-volver" onClick={onVolver}>←</button>
+      </div>
       <div className="header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>

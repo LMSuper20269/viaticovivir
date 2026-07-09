@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
-export default function PantallaCargarGasto({ saldoDisponible, onVolver, onGuardar, persona }) {
+export default function PantallaCargarGasto({ saldoDisponible, onVolver, onGuardar, persona, cajaId }) {
   const [motivo, setMotivo] = useState('')
   const [monto, setMonto] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -41,7 +41,7 @@ export default function PantallaCargarGasto({ saldoDisponible, onVolver, onGuard
     if (!monto || montoNum <= 0) { setError('Ingresá un monto válido.'); return }
     if (montoNum > saldoDisponible) { setError(`El monto supera el saldo disponible ($${saldoDisponible.toLocaleString('es-AR')}).`); return }
     setGuardando(true)
-    await onGuardar({ motivo: motivo.trim(), monto: montoNum, persona })
+    await onGuardar({ motivo: motivo.trim(), monto: montoNum, persona, cajaId })
     setGuardando(false)
   }
 
