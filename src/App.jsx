@@ -7,6 +7,7 @@ import PantallaCargarGasto from './components/PantallaCargarGasto'
 import PantallaNewCaja from './components/PantallaNewCaja'
 import PantallaArchivo from './components/PantallaArchivo'
 import PantallaEditarCaja from './components/PantallaEditarCaja'
+import PantallaEditarGasto from './components/PantallaEditarGasto'
 
 export default function App() {
   const [persona, setPersona] = useState(() => localStorage.getItem('gastos_persona') || '')
@@ -14,6 +15,7 @@ export default function App() {
   const [cajasActivas, setCajasActivas] = useState([])
   const [cajasArchivadas, setCajasArchivadas] = useState([])
   const [cajaSeleccionada, setCajaSeleccionada] = useState(null)
+  const [gastoEditando, setGastoEditando] = useState(null)
   const [gastosPorCaja, setGastosPorCaja] = useState({})
   const [cargando, setCargando] = useState(true)
 
@@ -88,6 +90,19 @@ export default function App() {
     setVista('caja-detalle')
   }
 
+  async function guardarEdicionGasto(gasto, cambios) {
+    await supabase.from('gastos').update({ motivo: cambios.motivo, monto: cambios.monto }).eq('id', gasto.id)
+    const caja = cajasActivas.find(c => c.id === gasto.caja_id)
+    if (caja) {
+      const diferencia = Number(cambios.monto) - Number(gasto.monto)
+      const nuevoSaldo = Math.max(0, Number(caja.saldo) - diferencia)
+      await supabase.from('cajas').update({ saldo: nuevoSaldo }).eq('id', gasto.caja_id)
+    }
+    await cargarDatos()
+    setGastoEditando(null)
+    setVista('caja-detalle')
+  }
+
   async function eliminarGasto(gasto) {
     const ok = window.confirm(`¿Eliminar el gasto "${gasto.motivo}" de $${Number(gasto.monto).toLocaleString('es-AR')}?`)
     if (!ok) return
@@ -141,6 +156,7 @@ export default function App() {
       onCerrarCaja={() => cerrarCaja(cajaActual)}
       onEditarCaja={() => setVista('editar-caja')}
       onEliminarGasto={eliminarGasto}
+      onEditarGasto={g => { setGastoEditando(g); setVista('editar-gasto') }}
       onCerrarSesion={cerrarSesion}
     />
   }
@@ -153,6 +169,16 @@ export default function App() {
       persona={persona}
       onVolver={() => setVista('caja-detalle')}
       onGuardar={cargarGasto}
+    />
+  }
+
+  if (vista === 'editar-gasto' && gastoEditando && cajaSeleccionada) {
+    const cajaActual = cajasActivas.find(c => c.id === cajaSeleccionada.id) || cajaSeleccionada
+    return <PantallaEditarGasto
+      gasto={gastoEditando}
+      saldoDisponible={Number(cajaActual.saldo)}
+      onVolver={() => { setGastoEditando(null); setVista('caja-detalle') }}
+      onGuardar={guardarEdicionGasto}
     />
   }
 

@@ -1,4 +1,4 @@
-export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onCerrarSesion, onVolver }) {
+export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onEditarGasto, onCerrarSesion, onVolver }) {
   const saldoPorcentaje = Math.round((caja.saldo / caja.monto_inicial) * 100)
   const agotada = caja.saldo <= 0
 
@@ -78,6 +78,12 @@ export default function PantallaCaja({ caja, gastos, onAgregarGasto, onCerrarCaj
               </div>
               <p className="gasto-monto">-${Number(g.monto).toLocaleString('es-AR')}</p>
             </div>
+            <button
+              onClick={() => onEditarGasto(g)}
+              style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 12, textAlign: 'right', padding: '2px 0' }}
+            >
+              ✎ editar
+            </button>
             <button
               onClick={() => onEliminarGasto(g)}
               style={{ background: 'none', border: 'none', color: 'var(--rojo)', fontSize: 12, textAlign: 'right', padding: '2px 0' }}
