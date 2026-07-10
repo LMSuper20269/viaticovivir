@@ -8,6 +8,7 @@ import PantallaNewCaja from './components/PantallaNewCaja'
 import PantallaArchivo from './components/PantallaArchivo'
 import PantallaEditarCaja from './components/PantallaEditarCaja'
 import PantallaEditarGasto from './components/PantallaEditarGasto'
+import PantallaBalance from './components/PantallaBalance'
 
 export default function App() {
   const [persona, setPersona] = useState(() => localStorage.getItem('gastos_persona') || '')
@@ -139,6 +140,14 @@ export default function App() {
   if (!persona) return <PantallaBienvenida onConfirmar={confirmarPersona} />
   if (cargando) return <div style={{ color: '#aaa', padding: 40, textAlign: 'center' }}>Cargando...</div>
 
+  if (vista === 'balance')
+    return <PantallaBalance
+      gastosPorCaja={gastosPorCaja}
+      cajas={[...cajasActivas, ...cajasArchivadas]}
+      persona={persona}
+      onVolver={() => setVista('cajas')}
+    />
+
   if (vista === 'nueva-caja')
     return <PantallaNewCaja onVolver={() => setVista('cajas')} onGuardar={crearCaja} />
 
@@ -196,5 +205,6 @@ export default function App() {
     onNuevaCaja={() => setVista('nueva-caja')}
     onVerArchivo={() => setVista('archivo')}
     onCerrarSesion={cerrarSesion}
+    onVerBalance={() => setVista('balance')}
   />
 }

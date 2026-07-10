@@ -1,4 +1,4 @@
-export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, onSeleccionar, onNuevaCaja, onVerArchivo, onCerrarSesion }) {
+export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, onSeleccionar, onNuevaCaja, onVerArchivo, onCerrarSesion, onVerBalance }) {
   const totalDisponible = cajasActivas.reduce((acc, c) => acc + Number(c.saldo), 0)
 
   return (
@@ -29,8 +29,16 @@ export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, on
       </div>
 
       <div className="contenedor">
-        <button className="btn-principal" onClick={onNuevaCaja} style={{ marginBottom: 16 }}>
+        <button className="btn-principal" onClick={onNuevaCaja} style={{ marginBottom: 10 }}>
           + Nueva caja
+        </button>
+
+        <button onClick={onVerBalance} style={{
+          width: '100%', background: 'var(--fondo-card)', color: 'var(--amarillo)',
+          border: '1px solid var(--amarillo)', borderRadius: 12, padding: 14,
+          fontSize: 15, fontWeight: 700, marginBottom: 16
+        }}>
+          📊 Balance ingresos / gastos
         </button>
 
         <p className="seccion-titulo">Cajas activas</p>
