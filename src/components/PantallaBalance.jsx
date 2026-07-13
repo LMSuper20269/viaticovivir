@@ -54,11 +54,11 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, onVolve
     }
   }
 
-  // Gastos del período: suma todos los gastos de todas las cajas en el rango
+  // Gastos del período: solo los PAGADOS (no pendientes)
   const todosGastos = Object.values(gastosPorCaja).flat()
   const gastosPeriodo = todosGastos.filter(g => {
     const f = g.creado_en?.split('T')[0]
-    return f >= desde && f <= hasta
+    return f >= desde && f <= hasta && g.estado !== 'pendiente'
   })
   const totalGastos = gastosPeriodo.reduce((acc, g) => acc + Number(g.monto), 0)
 
