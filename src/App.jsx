@@ -62,11 +62,11 @@ export default function App() {
 
   async function cargarGastosFijos() {
     const { data } = await supabase
-      .from('gastos_fijos').select('*').eq('activo', true).order('orden', { ascending: true })
+      .from('gastos_fijos').select('*').eq('activo', true).order('nombre', { ascending: true })
     if (data) setGastosFijos(data)
   }
 
-  async function crearCajaFijaMes({ items, total, fecha }) {
+  async function crearCajaFijaMes({ items, total, fecha, montosIds }) {
     const mes = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
     const { data: caja } = await supabase.from('cajas').insert({
       descripcion: `Gastos fijos — ${mes}`,
@@ -86,7 +86,16 @@ export default function App() {
         })
       }
     }
+
+    // Actualizar monto de referencia en la plantilla con los valores de este mes
+    for (const { id, monto } of montosIds) {
+      if (monto > 0) {
+        await supabase.from('gastos_fijos').update({ monto_referencia: monto }).eq('id', id)
+      }
+    }
+
     await cargarDatos()
+    await cargarGastosFijos()
     setVista('cajas')
   }
 

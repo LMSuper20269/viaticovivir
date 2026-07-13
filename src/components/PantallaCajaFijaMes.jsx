@@ -23,9 +23,14 @@ export default function PantallaCajaFijaMes({ gastosFijos, onVolver, onCrear }) 
       monto: Number(montos[g.id] || 0),
     })).filter(g => g.monto > 0)
 
+    const montosIds = gastosFijos.map(g => ({
+      id: g.id,
+      monto: Number(montos[g.id] || 0),
+    }))
+
     if (items.length === 0) return
     setGuardando(true)
-    await onCrear({ items, total, fecha: hoy() })
+    await onCrear({ items, total, fecha: hoy(), montosIds })
     setGuardando(false)
   }
 

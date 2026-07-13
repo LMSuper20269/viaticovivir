@@ -13,7 +13,7 @@ export default function PantallaGastosFijos({ onVolver }) {
 
   async function cargar() {
     const { data } = await supabase
-      .from('gastos_fijos').select('*').order('orden', { ascending: true })
+      .from('gastos_fijos').select('*').order('nombre', { ascending: true })
     if (data) setItems(data)
   }
 
