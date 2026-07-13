@@ -71,7 +71,7 @@ export default function App() {
     const { data: caja } = await supabase.from('cajas').insert({
       descripcion: `Gastos fijos — ${mes}`,
       monto_inicial: total,
-      saldo: 0,
+      saldo: total,
       fecha_inicio: fecha,
       estado: 'activa',
     }).select().single()
@@ -83,11 +83,11 @@ export default function App() {
           motivo: item.nombre,
           monto: item.monto,
           persona: 'Sistema',
+          estado: 'pendiente',
         })
       }
     }
 
-    // Actualizar monto de referencia en la plantilla con los valores de este mes
     for (const { id, monto } of montosIds) {
       if (monto > 0) {
         await supabase.from('gastos_fijos').update({ monto_referencia: monto }).eq('id', id)
@@ -132,6 +132,21 @@ export default function App() {
     }
     await cargarDatos()
     setVista('caja-detalle')
+  }
+
+  async function confirmarPago(gasto, montoConfirmado, personaQuePago) {
+    await supabase.from('gastos').update({
+      estado: 'pagado',
+      monto: montoConfirmado,
+      persona: personaQuePago,
+    }).eq('id', gasto.id)
+
+    const caja = cajasActivas.find(c => c.id === gasto.caja_id)
+    if (caja) {
+      const nuevoSaldo = Math.max(0, Number(caja.saldo) - montoConfirmado)
+      await supabase.from('cajas').update({ saldo: nuevoSaldo }).eq('id', gasto.caja_id)
+    }
+    await cargarDatos()
   }
 
   async function guardarEdicionGasto(gasto, cambios) {
@@ -213,12 +228,14 @@ export default function App() {
     return <PantallaCaja
       caja={cajaActual}
       gastos={gastosPorCaja[cajaActual.id] || []}
+      persona={persona}
       onVolver={() => setVista('cajas')}
       onAgregarGasto={() => setVista('nuevo-gasto')}
       onCerrarCaja={() => cerrarCaja(cajaActual)}
       onEditarCaja={() => setVista('editar-caja')}
       onEliminarGasto={eliminarGasto}
       onEditarGasto={g => { setGastoEditando(g); setVista('editar-gasto') }}
+      onConfirmarPago={confirmarPago}
       onCerrarSesion={cerrarSesion}
     />
   }
