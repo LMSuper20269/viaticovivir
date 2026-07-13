@@ -9,6 +9,8 @@ import PantallaArchivo from './components/PantallaArchivo'
 import PantallaEditarCaja from './components/PantallaEditarCaja'
 import PantallaEditarGasto from './components/PantallaEditarGasto'
 import PantallaBalance from './components/PantallaBalance'
+import PantallaGastosFijos from './components/PantallaGastosFijos'
+import PantallaCajaFijaMes from './components/PantallaCajaFijaMes'
 
 export default function App() {
   const [persona, setPersona] = useState(() => localStorage.getItem('gastos_persona') || '')
@@ -18,11 +20,13 @@ export default function App() {
   const [cajaSeleccionada, setCajaSeleccionada] = useState(null)
   const [gastoEditando, setGastoEditando] = useState(null)
   const [gastosPorCaja, setGastosPorCaja] = useState({})
+  const [gastosFijos, setGastosFijos] = useState([])
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
     if (!persona) return
     cargarDatos()
+    cargarGastosFijos()
     const canal = supabase
       .channel('gastos-cambios')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cajas' }, cargarDatos)
@@ -54,6 +58,36 @@ export default function App() {
       })
       setGastosPorCaja(porCaja)
     }
+  }
+
+  async function cargarGastosFijos() {
+    const { data } = await supabase
+      .from('gastos_fijos').select('*').eq('activo', true).order('orden', { ascending: true })
+    if (data) setGastosFijos(data)
+  }
+
+  async function crearCajaFijaMes({ items, total, fecha }) {
+    const mes = new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+    const { data: caja } = await supabase.from('cajas').insert({
+      descripcion: `Gastos fijos — ${mes}`,
+      monto_inicial: total,
+      saldo: 0,
+      fecha_inicio: fecha,
+      estado: 'activa',
+    }).select().single()
+
+    if (caja) {
+      for (const item of items) {
+        await supabase.from('gastos').insert({
+          caja_id: caja.id,
+          motivo: item.nombre,
+          monto: item.monto,
+          persona: 'Sistema',
+        })
+      }
+    }
+    await cargarDatos()
+    setVista('cajas')
   }
 
   function cerrarSesion() {
@@ -140,6 +174,16 @@ export default function App() {
   if (!persona) return <PantallaBienvenida onConfirmar={confirmarPersona} />
   if (cargando) return <div style={{ color: '#aaa', padding: 40, textAlign: 'center' }}>Cargando...</div>
 
+  if (vista === 'gastos-fijos')
+    return <PantallaGastosFijos onVolver={() => setVista('cajas')} />
+
+  if (vista === 'caja-fija-mes')
+    return <PantallaCajaFijaMes
+      gastosFijos={gastosFijos}
+      onVolver={() => setVista('cajas')}
+      onCrear={crearCajaFijaMes}
+    />
+
   if (vista === 'balance')
     return <PantallaBalance
       gastosPorCaja={gastosPorCaja}
@@ -206,5 +250,7 @@ export default function App() {
     onVerArchivo={() => setVista('archivo')}
     onCerrarSesion={cerrarSesion}
     onVerBalance={() => setVista('balance')}
+    onGastosFijos={() => setVista('gastos-fijos')}
+    onCajaFijaMes={() => setVista('caja-fija-mes')}
   />
 }

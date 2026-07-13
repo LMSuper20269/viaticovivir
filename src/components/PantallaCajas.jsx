@@ -1,4 +1,4 @@
-export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, onSeleccionar, onNuevaCaja, onVerArchivo, onCerrarSesion, onVerBalance }) {
+export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, onSeleccionar, onNuevaCaja, onVerArchivo, onCerrarSesion, onVerBalance, onGastosFijos, onCajaFijaMes }) {
   const totalDisponible = cajasActivas.reduce((acc, c) => acc + Number(c.saldo), 0)
 
   return (
@@ -29,8 +29,16 @@ export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, on
       </div>
 
       <div className="contenedor">
-        <button className="btn-principal" onClick={onNuevaCaja} style={{ marginBottom: 10 }}>
+        <button className="btn-principal" onClick={onNuevaCaja} style={{ marginBottom: 8 }}>
           + Nueva caja
+        </button>
+
+        <button onClick={onCajaFijaMes} style={{
+          width: '100%', background: 'var(--fondo-card)', color: 'var(--blanco)',
+          border: '1px solid var(--borde)', borderRadius: 12, padding: 14,
+          fontSize: 15, fontWeight: 600, marginBottom: 8
+        }}>
+          📋 Crear caja de gastos fijos del mes
         </button>
 
         <button onClick={onVerBalance} style={{
@@ -89,6 +97,9 @@ export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, on
 
         <button className="btn-secundario" style={{ marginTop: 8 }} onClick={onVerArchivo}>
           📁 Ver cajas anteriores
+        </button>
+        <button className="btn-secundario" style={{ marginTop: 8 }} onClick={onGastosFijos}>
+          ⚙️ Configurar gastos fijos
         </button>
       </div>
     </div>
