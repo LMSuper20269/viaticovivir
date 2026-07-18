@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onEditarGasto, onConfirmarPago, onCerrarSesion, onVolver }) {
+export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onEditarGasto, onConfirmarPago, onCerrarSesion, onVolver, onInicio }) {
   const [confirmando, setConfirmando] = useState(null)
   const [montoConfirm, setMontoConfirm] = useState('')
 
@@ -24,8 +24,15 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
 
   return (
     <div>
-      <div style={{ padding: '12px 16px 0' }}>
+      <div style={{ padding: '12px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button className="btn-volver" onClick={onVolver}>←</button>
+        <button onClick={onInicio} style={{
+          background: 'var(--fondo-card)', border: '1px solid var(--borde)',
+          color: 'var(--blanco)', borderRadius: 20, padding: '6px 16px',
+          fontSize: 13, fontWeight: 600
+        }}>
+          🏠 Inicio
+        </button>
       </div>
       <div className="header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

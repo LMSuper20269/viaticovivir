@@ -40,8 +40,17 @@ export default function App() {
     const { data: cajas } = await supabase
       .from('cajas').select('*').order('creado_en', { ascending: false })
     if (cajas) {
-      setCajasActivas(cajas.filter(c => c.estado === 'activa'))
-      setCajasArchivadas(cajas.filter(c => c.estado === 'archivada'))
+      const activas = cajas.filter(c => c.estado === 'activa')
+      const archivadas = cajas.filter(c => c.estado === 'archivada')
+      setCajasActivas(activas)
+      setCajasArchivadas(archivadas)
+
+      // Al cargar por primera vez, abrir la caja con más saldo
+      if (activas.length > 0 && vista === 'cajas') {
+        const cajaMasSaldo = [...activas].sort((a, b) => Number(b.saldo) - Number(a.saldo))[0]
+        setCajaSeleccionada(cajaMasSaldo)
+        setVista('caja-detalle')
+      }
     }
     await cargarTodosGastos()
     setCargando(false)
@@ -230,6 +239,7 @@ export default function App() {
       gastos={gastosPorCaja[cajaActual.id] || []}
       persona={persona}
       onVolver={() => setVista('cajas')}
+      onInicio={() => setVista('cajas')}
       onAgregarGasto={() => setVista('nuevo-gasto')}
       onCerrarCaja={() => cerrarCaja(cajaActual)}
       onEditarCaja={() => setVista('editar-caja')}
