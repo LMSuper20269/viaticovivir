@@ -10,8 +10,14 @@
   --amarillo-texto: #1a1a1a;
   --borde: #3a3a3a;
   --radius: 12px;
+  --escala: 1;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: calc(16px * var(--escala));
 }
+
+.escala-normal { --escala: 1; }
+.escala-grande { --escala: 1.2; }
+.escala-muy-grande { --escala: 1.45; }
 
 * { box-sizing: border-box; }
 

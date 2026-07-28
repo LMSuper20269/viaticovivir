@@ -1,4 +1,4 @@
-export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, onSeleccionar, onNuevaCaja, onVerArchivo, onCerrarSesion, onVerBalance, onGastosFijos, onCajaFijaMes }) {
+export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, onSeleccionar, onNuevaCaja, onVerArchivo, onCerrarSesion, onVerBalance, onGastosFijos, onCajaFijaMes, escala, onCambiarEscala }) {
 
   // Cajas fijas: las que tienen "Gastos fijos" en el nombre
   const cajasFijas = cajasActivas.filter(c => c.descripcion?.startsWith('Gastos fijos'))
@@ -169,6 +169,31 @@ export default function PantallaCajas({ cajasActivas, gastosPorCaja, persona, on
         <button className="btn-secundario" style={{ marginTop: 8 }} onClick={onGastosFijos}>
           ⚙️ Configurar gastos fijos
         </button>
+
+        {/* Selector de tamaño de letra */}
+        <div style={{ marginTop: 20, background: 'var(--fondo-card)', borderRadius: 12, padding: '14px 16px' }}>
+          <p style={{ color: 'var(--gris)', fontSize: '0.75rem', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+            Tamaño de letra
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[
+              { valor: 'normal', etiqueta: 'A', size: '14px' },
+              { valor: 'grande', etiqueta: 'A', size: '18px' },
+              { valor: 'muy-grande', etiqueta: 'A', size: '22px' },
+            ].map(op => (
+              <button key={op.valor} onClick={() => onCambiarEscala(op.valor)} style={{
+                flex: 1, padding: '10px',
+                borderRadius: 10,
+                border: escala === op.valor ? '2px solid var(--amarillo)' : '1px solid var(--borde)',
+                background: escala === op.valor ? 'var(--fondo)' : 'transparent',
+                color: escala === op.valor ? 'var(--amarillo)' : 'var(--gris)',
+                fontSize: op.size, fontWeight: 700,
+              }}>
+                {op.etiqueta}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

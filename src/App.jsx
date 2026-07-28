@@ -22,6 +22,19 @@ export default function App() {
   const [gastosPorCaja, setGastosPorCaja] = useState({})
   const [gastosFijos, setGastosFijos] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [escala, setEscala] = useState(() => localStorage.getItem('escala_letra') || 'normal')
+
+  useEffect(() => {
+    const root = document.getElementById('root')
+    if (root) {
+      root.className = `escala-${escala}`
+    }
+  }, [escala])
+
+  function cambiarEscala(nueva) {
+    localStorage.setItem('escala_letra', nueva)
+    setEscala(nueva)
+  }
 
   useEffect(() => {
     if (!persona) return
@@ -288,5 +301,7 @@ export default function App() {
     onVerBalance={() => setVista('balance')}
     onGastosFijos={() => setVista('gastos-fijos')}
     onCajaFijaMes={() => setVista('caja-fija-mes')}
+    escala={escala}
+    onCambiarEscala={cambiarEscala}
   />
 }
