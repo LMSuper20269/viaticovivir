@@ -43,12 +43,13 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
     setCargando(false)
   }
 
-  // Calcular gastos según modo
+  // Calcular gastos según modo - incluye cajas activas Y archivadas
+  const todasLasCajas = [...cajas]
   const todosGastos = Object.values(gastosPorCaja).flat().filter(g => g.estado !== 'pendiente')
 
   let gastosFiltrados = []
   if (modo === 'mes' && mesSeleccionado) {
-    const cajasDelMes = cajas.filter(c => c.mes_id === mesSeleccionado)
+    const cajasDelMes = todasLasCajas.filter(c => c.mes_id === mesSeleccionado)
     const idsCajas = cajasDelMes.map(c => c.id)
     gastosFiltrados = todosGastos.filter(g => idsCajas.includes(g.caja_id))
   } else if (modo === 'periodo') {
