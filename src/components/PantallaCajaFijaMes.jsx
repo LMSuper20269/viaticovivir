@@ -3,8 +3,8 @@ import { useState } from 'react'
 function hoy() { return new Date().toISOString().split('T')[0] }
 
 const NOMBRES_GRUPO = {
-  a: 'Gastos Iniciales Fijos',
-  b: 'Gastos Fijos',
+  a: 'Gastos Fijos Iniciales',
+  b: 'Gastos Fijos Iniciales',
 }
 
 export default function PantallaCajaFijaMes({ gastosFijos, grupo, onVolver, onCrear }) {

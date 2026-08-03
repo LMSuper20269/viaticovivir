@@ -84,24 +84,22 @@ export default function PantallaMes({ mes, cajasActivas, gastosPorCaja, ingresos
         {/* Botones de acción */}
         <button className="btn-principal" onClick={onNuevaCaja} style={{ marginBottom: 8 }}>+ Nueva caja variable</button>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <button onClick={() => onCajaFijaMes('a')} style={{ flex: 1, background: 'var(--fondo-card)', color: 'var(--blanco)', border: '1px solid var(--borde)', borderRadius: 12, padding: 12, fontSize: 13, fontWeight: 600 }}>
-            📋 Fijos Iniciales
-          </button>
-          <button onClick={() => onCajaFijaMes('b')} style={{ flex: 1, background: 'var(--fondo-card)', color: 'var(--blanco)', border: '1px solid var(--borde)', borderRadius: 12, padding: 12, fontSize: 13, fontWeight: 600 }}>
-            📋 Gastos Fijos
-          </button>
-        </div>
+        <button onClick={() => onCajaFijaMes('a')} style={{
+          width: '100%', background: 'var(--fondo-card)', color: 'var(--blanco)',
+          border: '1px solid var(--borde)', borderRadius: 12, padding: 14,
+          fontSize: 15, fontWeight: 600, marginBottom: 8
+        }}>
+          📋 Gastos Fijos Iniciales
+        </button>
 
         <button onClick={onVerBalance} style={{ width: '100%', background: 'var(--fondo-card)', color: 'var(--amarillo)', border: '1px solid var(--amarillo)', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
           📊 Balance ingresos / gastos
         </button>
 
         {/* Cajas Fijas A */}
-        {cajasFijasA.length > 0 && <SeccionCajas titulo="Gastos Iniciales Fijos" cajas={cajasFijasA} gastosPorCaja={gastosPorCaja} color="var(--amarillo)" onSeleccionar={onSeleccionar} />}
-
-        {/* Cajas Fijas B */}
-        {cajasFijasB.length > 0 && <SeccionCajas titulo="Gastos Fijos" cajas={cajasFijasB} gastosPorCaja={gastosPorCaja} color="#a78bfa" onSeleccionar={onSeleccionar} />}
+        {(cajasFijasA.length > 0 || cajasFijasB.length > 0) && (
+          <SeccionCajas titulo="Gastos Fijos Iniciales" cajas={[...cajasFijasA, ...cajasFijasB]} gastosPorCaja={gastosPorCaja} color="var(--amarillo)" onSeleccionar={onSeleccionar} />
+        )}
 
         {/* Cajas Variables */}
         {cajasVariables.length > 0 && <SeccionCajas titulo="Cajas variables" cajas={cajasVariables} gastosPorCaja={gastosPorCaja} color="var(--verde)" onSeleccionar={onSeleccionar} showSaldo />}
