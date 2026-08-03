@@ -138,12 +138,23 @@ export default function App() {
 
   async function cerrarMes({ trasladar, saldoRestante }) {
     if (!mesActivo) return
+
+    // Archivar el mes
     await supabase.from('meses').update({ estado: 'cerrado' }).eq('id', mesActivo.id)
+
+    // Archivar todas las cajas del mes
     const cajasMes = cajasActivas.filter(c => c.mes_id === mesActivo.id)
     for (const caja of cajasMes) {
       await supabase.from('cajas').update({ estado: 'archivada' }).eq('id', caja.id)
     }
-    await crearMesNuevo(trasladar && saldoRestante > 0 ? saldoRestante : 0)
+
+    // Calcular saldo real a trasladar: solo cajas variables activas del mes con saldo > 0
+    const cajasVariablesConSaldo = cajasMes.filter(c =>
+      (c.tipo_caja === 'variable' || !c.tipo_caja) && Number(c.saldo) > 0
+    )
+    const saldoReal = cajasVariablesConSaldo.reduce((acc, c) => acc + Number(c.saldo), 0)
+
+    await crearMesNuevo(trasladar && saldoReal > 0 ? saldoReal : 0)
   }
 
   async function crearCajaFijaMes({ items, total, fecha, grupo, nombreGrupo }) {
@@ -294,7 +305,9 @@ export default function App() {
   }
 
   const cajasMesActivo = cajasActivas.filter(c => c.mes_id === mesActivo.id)
-  const cajasConSaldo = cajasMesActivo.filter(c => Number(c.saldo) > 0 && c.tipo_caja === 'variable')
+  const cajasConSaldo = cajasMesActivo.filter(c =>
+    (c.tipo_caja === 'variable' || !c.tipo_caja) && Number(c.saldo) > 0
+  )
   const saldoRestante = cajasConSaldo.reduce((acc, c) => acc + Number(c.saldo), 0)
 
   if (vista === 'cerrar-mes')
