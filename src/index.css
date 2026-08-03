@@ -19,7 +19,10 @@
 .escala-grande { --escala: 1.2; }
 .escala-muy-grande { --escala: 1.45; }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; text-transform: uppercase; }
+
+input, input::placeholder { text-transform: uppercase; }
+select option { text-transform: uppercase; }
 
 html, body {
   margin: 0;
