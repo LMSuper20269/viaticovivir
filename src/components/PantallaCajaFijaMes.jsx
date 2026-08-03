@@ -3,7 +3,7 @@ import { useState } from 'react'
 function hoy() { return new Date().toISOString().split('T')[0] }
 
 const NOMBRES_GRUPO = {
-  a: 'Gastos Fijos Iniciales',
+  a: 'Gastos Iniciales Fijos',
   b: 'Gastos Fijos',
 }
 

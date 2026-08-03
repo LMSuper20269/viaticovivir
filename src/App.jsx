@@ -68,8 +68,19 @@ export default function App() {
   async function cargarCajas() {
     const { data } = await supabase.from('cajas').select('*').order('creado_en', { ascending: false })
     if (data) {
-      setCajasActivas(data.filter(c => c.estado === 'activa'))
-      setCajasArchivadas(data.filter(c => c.estado === 'archivada'))
+      const activas = data.filter(c => c.estado === 'activa')
+      const archivadas = data.filter(c => c.estado === 'archivada')
+      setCajasActivas(activas)
+      setCajasArchivadas(archivadas)
+
+      // Al cargar por primera vez, abrir la caja variable con más saldo
+      const variablesConSaldo = activas
+        .filter(c => c.tipo_caja === 'variable' || !c.tipo_caja)
+        .sort((a, b) => Number(b.saldo) - Number(a.saldo))
+      if (variablesConSaldo.length > 0 && vista === 'mes') {
+        setCajaSeleccionada(variablesConSaldo[0])
+        setVista('caja-detalle')
+      }
     }
   }
 

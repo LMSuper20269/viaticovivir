@@ -98,7 +98,7 @@ export default function PantallaMes({ mes, cajasActivas, gastosPorCaja, ingresos
         </button>
 
         {/* Cajas Fijas A */}
-        {cajasFijasA.length > 0 && <SeccionCajas titulo="Gastos Fijos Iniciales" cajas={cajasFijasA} gastosPorCaja={gastosPorCaja} color="var(--amarillo)" onSeleccionar={onSeleccionar} />}
+        {cajasFijasA.length > 0 && <SeccionCajas titulo="Gastos Iniciales Fijos" cajas={cajasFijasA} gastosPorCaja={gastosPorCaja} color="var(--amarillo)" onSeleccionar={onSeleccionar} />}
 
         {/* Cajas Fijas B */}
         {cajasFijasB.length > 0 && <SeccionCajas titulo="Gastos Fijos" cajas={cajasFijasB} gastosPorCaja={gastosPorCaja} color="#a78bfa" onSeleccionar={onSeleccionar} />}
