@@ -1,69 +1,72 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
+const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
 function hoy() { return new Date().toISOString().split('T')[0] }
-function primerDiaMes() {
-  const h = new Date()
-  return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}-01`
-}
-
-const PERIODOS = [
-  { label: 'Este mes', desde: primerDiaMes(), hasta: hoy() },
-  { label: 'Últimos 2 meses', desde: offsetMes(-1), hasta: hoy() },
-  { label: 'Últimos 3 meses', desde: offsetMes(-2), hasta: hoy() },
-  { label: 'Últimos 6 meses', desde: offsetMes(-5), hasta: hoy() },
-  { label: 'Este año', desde: `${new Date().getFullYear()}-01-01`, hasta: hoy() },
-  { label: 'Personalizado', desde: '', hasta: '' },
-]
-
-function offsetMes(n) {
-  const d = new Date()
-  d.setMonth(d.getMonth() + n, 1)
+function primerDiaMes(año, mes) { return `${año}-${String(mes).padStart(2,'0')}-01` }
+function ultimoDiaMes(año, mes) {
+  const d = new Date(año, mes, 0)
   return d.toISOString().split('T')[0]
 }
 
-export default function PantallaBalance({ gastosPorCaja, cajas, persona, onVolver }) {
-  const [periodoIdx, setPeriodoIdx] = useState(0)
-  const [desde, setDesde] = useState(primerDiaMes())
+export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActivo, ingresosMesActivo, onVolver, meses }) {
+  const [modo, setModo] = useState('mes') // 'mes' | 'periodo'
+  const [mesSeleccionado, setMesSeleccionado] = useState(mesActivo?.id || '')
+  const [desde, setDesde] = useState(mesActivo ? primerDiaMes(mesActivo.año, mesActivo.mes) : primerDiaMes(new Date().getFullYear(), new Date().getMonth() + 1))
   const [hasta, setHasta] = useState(hoy())
   const [ingresos, setIngresos] = useState([])
-  const [vistaTab, setVistaTab] = useState('resumen') // 'resumen' | 'ingresos'
-  const [cargando, setCargando] = useState(true)
+  const [tab, setTab] = useState('resumen')
+  const [cargando, setCargando] = useState(false)
+
+  const todosMeses = meses || []
 
   useEffect(() => {
-    cargarIngresos()
-  }, [desde, hasta])
+    if (modo === 'mes' && mesSeleccionado) {
+      cargarIngresosPorMes(mesSeleccionado)
+    } else if (modo === 'periodo') {
+      cargarIngresosPorFecha()
+    }
+  }, [modo, mesSeleccionado, desde, hasta])
 
-  async function cargarIngresos() {
+  async function cargarIngresosPorMes(mesId) {
     setCargando(true)
-    const { data } = await supabase
-      .from('ingresos')
-      .select('*')
-      .gte('fecha', desde)
-      .lte('fecha', hasta)
-      .order('fecha', { ascending: false })
+    const { data } = await supabase.from('ingresos').select('*').eq('mes_id', mesId).order('fecha', { ascending: false })
     if (data) setIngresos(data)
     setCargando(false)
   }
 
-  function elegirPeriodo(idx) {
-    setPeriodoIdx(idx)
-    if (idx < PERIODOS.length - 1) {
-      setDesde(PERIODOS[idx].desde)
-      setHasta(PERIODOS[idx].hasta)
-    }
+  async function cargarIngresosPorFecha() {
+    setCargando(true)
+    const { data } = await supabase.from('ingresos').select('*').gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false })
+    if (data) setIngresos(data)
+    setCargando(false)
   }
 
-  // Gastos del período: solo los PAGADOS (no pendientes)
-  const todosGastos = Object.values(gastosPorCaja).flat()
-  const gastosPeriodo = todosGastos.filter(g => {
-    const f = g.creado_en?.split('T')[0]
-    return f >= desde && f <= hasta && g.estado !== 'pendiente'
-  })
-  const totalGastos = gastosPeriodo.reduce((acc, g) => acc + Number(g.monto), 0)
+  // Calcular gastos según modo
+  const todosGastos = Object.values(gastosPorCaja).flat().filter(g => g.estado !== 'pendiente')
 
-  const totalIngresosPesos = ingresos.reduce((acc, i) => acc + Number(i.monto_pesos), 0)
-  const balance = totalIngresosPesos - totalGastos
+  let gastosFiltrados = []
+  if (modo === 'mes' && mesSeleccionado) {
+    const cajasDelMes = cajas.filter(c => c.mes_id === mesSeleccionado)
+    const idsCajas = cajasDelMes.map(c => c.id)
+    gastosFiltrados = todosGastos.filter(g => idsCajas.includes(g.caja_id))
+  } else if (modo === 'periodo') {
+    gastosFiltrados = todosGastos.filter(g => {
+      const f = g.creado_en?.split('T')[0]
+      return f >= desde && f <= hasta
+    })
+  }
+
+  const totalIngresos = ingresos.reduce((acc, i) => acc + Number(i.monto_pesos), 0)
+  const totalGastos = gastosFiltrados.reduce((acc, g) => acc + Number(g.monto), 0)
+  const balance = totalIngresos - totalGastos
+
+  // Título del período seleccionado
+  const mesObj = todosMeses.find(m => m.id === mesSeleccionado)
+  const tituloPeriodo = modo === 'mes' && mesObj
+    ? `${MESES_NOMBRES[mesObj.mes - 1]} ${mesObj.año}`
+    : modo === 'periodo' ? `${desde.split('-').reverse().join('/')} al ${hasta.split('-').reverse().join('/')}` : ''
 
   return (
     <div>
@@ -71,23 +74,44 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, onVolve
         <button className="btn-volver" onClick={onVolver}>←</button>
       </div>
       <div className="header">
-        <p className="subt">Balance de ingresos y gastos</p>
-        <p className="titulo">Resumen financiero</p>
+        <p className="subt">Balance financiero</p>
+        <p className="titulo">{tituloPeriodo || 'Seleccioná un período'}</p>
 
-        {/* Selector de período */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
-          {PERIODOS.map((p, i) => (
-            <button key={i} onClick={() => elegirPeriodo(i)} style={{
-              background: periodoIdx === i ? 'var(--amarillo)' : 'var(--fondo)',
-              color: periodoIdx === i ? '#1a1a1a' : 'var(--gris)',
-              border: 'none', borderRadius: 20, padding: '6px 12px',
-              fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap'
-            }}>{p.label}</button>
-          ))}
+        {/* Selector de modo */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <button onClick={() => setModo('mes')} style={{
+            flex: 1, padding: '8px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 600,
+            background: modo === 'mes' ? 'var(--amarillo)' : 'var(--fondo)',
+            color: modo === 'mes' ? '#1a1a1a' : 'var(--gris)'
+          }}>Por mes</button>
+          <button onClick={() => setModo('periodo')} style={{
+            flex: 1, padding: '8px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 600,
+            background: modo === 'periodo' ? 'var(--amarillo)' : 'var(--fondo)',
+            color: modo === 'periodo' ? '#1a1a1a' : 'var(--gris)'
+          }}>Por período</button>
         </div>
 
-        {periodoIdx === PERIODOS.length - 1 && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        {/* Selector por mes */}
+        {modo === 'mes' && (
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {todosMeses.map(m => (
+              <button key={m.id} onClick={() => setMesSeleccionado(m.id)} style={{
+                background: mesSeleccionado === m.id ? 'var(--amarillo)' : 'var(--fondo)',
+                color: mesSeleccionado === m.id ? '#1a1a1a' : 'var(--gris)',
+                border: 'none', borderRadius: 20, padding: '6px 14px',
+                fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap'
+              }}>
+                {MESES_NOMBRES[m.mes - 1]} {m.año}
+                {m.estado === 'activo' && ' ●'}
+              </button>
+            ))}
+            {todosMeses.length === 0 && <p style={{ color: 'var(--gris)', fontSize: 13 }}>No hay meses registrados aún.</p>}
+          </div>
+        )}
+
+        {/* Selector por período */}
+        {modo === 'periodo' && (
+          <div style={{ display: 'flex', gap: 8 }}>
             <div className="campo" style={{ flex: 1, marginBottom: 0 }}>
               <label>Desde</label>
               <input type="date" value={desde} onChange={e => setDesde(e.target.value)} />
@@ -106,7 +130,7 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, onVolve
           <div className="stat-card">
             <p className="label">Ingresos</p>
             <p className="valor" style={{ color: 'var(--verde)', fontSize: 18 }}>
-              ${Math.round(totalIngresosPesos).toLocaleString('es-AR')}
+              ${Math.round(totalIngresos).toLocaleString('es-AR')}
             </p>
           </div>
           <div className="stat-card">
@@ -129,22 +153,22 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, onVolve
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          {['resumen', 'ingresos'].map(tab => (
-            <button key={tab} onClick={() => setVistaTab(tab)} style={{
+          {['resumen', 'ingresos'].map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{
               flex: 1, padding: '10px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600,
-              background: vistaTab === tab ? 'var(--amarillo)' : 'var(--fondo-card)',
-              color: vistaTab === tab ? '#1a1a1a' : 'var(--gris)'
+              background: tab === t ? 'var(--amarillo)' : 'var(--fondo-card)',
+              color: tab === t ? '#1a1a1a' : 'var(--gris)'
             }}>
-              {tab === 'resumen' ? '📊 Gastos' : '💰 Ingresos'}
+              {t === 'resumen' ? '📊 Gastos' : '💰 Ingresos'}
             </button>
           ))}
         </div>
 
-        {vistaTab === 'resumen' && (
+        {tab === 'resumen' && (
           <>
-            <p className="seccion-titulo">Gastos del período ({gastosPeriodo.length})</p>
-            {gastosPeriodo.length === 0 && <div className="vacio">Sin gastos en este período.</div>}
-            {gastosPeriodo.map(g => (
+            <p className="seccion-titulo">Gastos pagados ({gastosFiltrados.length})</p>
+            {gastosFiltrados.length === 0 && <div className="vacio">Sin gastos en este período.</div>}
+            {gastosFiltrados.map(g => (
               <div key={g.id} className="gasto-fila">
                 <div>
                   <p className="gasto-motivo">{g.motivo}</p>
@@ -156,15 +180,15 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, onVolve
           </>
         )}
 
-        {vistaTab === 'ingresos' && (
-          <SeccionIngresos ingresos={ingresos} persona={persona} desde={desde} hasta={hasta} onActualizar={cargarIngresos} />
+        {tab === 'ingresos' && (
+          <SeccionIngresos ingresos={ingresos} persona={persona} mesId={modo === 'mes' ? mesSeleccionado : null} desde={desde} hasta={hasta} onActualizar={() => modo === 'mes' ? cargarIngresosPorMes(mesSeleccionado) : cargarIngresosPorFecha()} />
         )}
       </div>
     </div>
   )
 }
 
-function SeccionIngresos({ ingresos, persona, desde, hasta, onActualizar }) {
+function SeccionIngresos({ ingresos, persona, mesId, desde, hasta, onActualizar }) {
   const [mostrando, setMostrando] = useState(false)
   const [desc, setDesc] = useState('')
   const [monto, setMonto] = useState('')
@@ -173,26 +197,20 @@ function SeccionIngresos({ ingresos, persona, desde, hasta, onActualizar }) {
   const [fecha, setFecha] = useState(hoy())
   const [guardando, setGuardando] = useState(false)
 
-  const montoPesos = moneda === 'dolares' && tipoCambio && monto
-    ? Number(monto) * Number(tipoCambio)
-    : Number(monto)
+  const montoPesos = moneda === 'dolares' && tipoCambio && monto ? Number(monto) * Number(tipoCambio) : Number(monto)
 
   async function guardar() {
     if (!desc.trim() || !monto || Number(monto) <= 0) return
     if (moneda === 'dolares' && (!tipoCambio || Number(tipoCambio) <= 0)) return
     setGuardando(true)
     await supabase.from('ingresos').insert({
-      descripcion: desc.trim(),
-      monto: Number(monto),
-      moneda,
+      descripcion: desc.trim(), monto: Number(monto), moneda,
       tipo_cambio: moneda === 'dolares' ? Number(tipoCambio) : 1,
-      monto_pesos: montoPesos,
-      persona,
-      fecha,
+      monto_pesos: montoPesos, persona, fecha,
+      ...(mesId ? { mes_id: mesId } : {}),
     })
     setDesc(''); setMonto(''); setTipoCambio(''); setMoneda('pesos')
-    setMostrando(false)
-    setGuardando(false)
+    setMostrando(false); setGuardando(false)
     onActualizar()
   }
 
@@ -232,11 +250,7 @@ function SeccionIngresos({ ingresos, persona, desde, hasta, onActualizar }) {
             <div className="campo">
               <label>Tipo de cambio ($ por USD)</label>
               <input type="number" min="0" placeholder="Ej: 1200" value={tipoCambio} onChange={e => setTipoCambio(e.target.value)} />
-              {montoPesos > 0 && (
-                <p style={{ color: 'var(--verde)', fontSize: 13, margin: '6px 0 0' }}>
-                  = ${Math.round(montoPesos).toLocaleString('es-AR')} pesos
-                </p>
-              )}
+              {montoPesos > 0 && <p style={{ color: 'var(--verde)', fontSize: 13, margin: '6px 0 0' }}>= ${Math.round(montoPesos).toLocaleString('es-AR')} pesos</p>}
             </div>
           )}
           <div className="campo">

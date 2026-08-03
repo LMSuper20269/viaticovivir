@@ -313,7 +313,9 @@ export default function App() {
 
   if (vista === 'balance')
     return <PantallaBalance gastosPorCaja={gastosPorCaja} cajas={[...cajasActivas, ...cajasArchivadas]}
-      persona={persona} mesActivo={mesActivo} ingresosMesActivo={ingresosMes} onVolver={() => setVista('mes')} />
+      persona={persona} mesActivo={mesActivo} ingresosMesActivo={ingresosMes}
+      meses={[...(mesActivo ? [mesActivo] : []), ...mesesCerrados]}
+      onVolver={() => setVista('mes')} />
 
   if (vista === 'archivo')
     return <PantallaArchivo cajasArchivadas={cajasArchivadas} mesesCerrados={mesesCerrados}
