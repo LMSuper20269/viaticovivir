@@ -54,7 +54,7 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
     gastosFiltrados = todosGastos.filter(g => idsCajas.includes(g.caja_id))
   } else if (modo === 'periodo') {
     gastosFiltrados = todosGastos.filter(g => {
-      const f = g.creado_en?.split('T')[0]
+      const f = (g.pagado_en || g.creado_en)?.split('T')[0]
       return f >= desde && f <= hasta
     })
   }
@@ -173,7 +173,7 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
               <div key={g.id} className="gasto-fila">
                 <div>
                   <p className="gasto-motivo">{g.motivo}</p>
-                  <p className="gasto-meta">{g.persona} · {g.creado_en?.split('T')[0].split('-').reverse().join('/')}</p>
+                  <p className="gasto-meta">{g.persona} · {(g.pagado_en || g.creado_en)?.split('T')[0].split('-').reverse().join('/')}</p>
                 </div>
                 <p className="gasto-monto">-${Number(g.monto).toLocaleString('es-AR')}</p>
               </div>

@@ -220,7 +220,7 @@ export default function App() {
   }
 
   async function cargarGasto({ motivo, monto, persona: quien, cajaId }) {
-    await supabase.from('gastos').insert({ caja_id: cajaId, motivo, monto, persona: quien, estado: 'pagado' })
+    await supabase.from('gastos').insert({ caja_id: cajaId, motivo, monto, persona: quien, estado: 'pagado', pagado_en: new Date().toISOString() })
     const caja = cajasActivas.find(c => c.id === cajaId)
     if (caja) {
       const nuevoSaldo = Math.max(0, Number(caja.saldo) - monto)
@@ -232,7 +232,7 @@ export default function App() {
   }
 
   async function confirmarPago(gasto, montoConfirmado, personaQuePago) {
-    await supabase.from('gastos').update({ estado: 'pagado', monto: montoConfirmado, persona: personaQuePago }).eq('id', gasto.id)
+    await supabase.from('gastos').update({ estado: 'pagado', monto: montoConfirmado, persona: personaQuePago, pagado_en: new Date().toISOString() }).eq('id', gasto.id)
     const caja = cajasActivas.find(c => c.id === gasto.caja_id)
     if (caja) {
       const nuevoSaldo = Math.max(0, Number(caja.saldo) - montoConfirmado)

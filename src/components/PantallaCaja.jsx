@@ -9,6 +9,8 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
 
   const pendientes = gastos.filter(g => g.estado === 'pendiente')
   const pagados = gastos.filter(g => g.estado !== 'pendiente')
+    .slice()
+    .sort((a, b) => new Date(b.pagado_en || b.creado_en) - new Date(a.pagado_en || a.creado_en))
 
   function abrirConfirmar(g) {
     setConfirmando(g)
@@ -144,7 +146,7 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p className="gasto-motivo">{g.motivo}</p>
-                <p className="gasto-meta">{g.persona} · {formatFechaHora(g.creado_en)}</p>
+                <p className="gasto-meta">{g.persona} · {formatFechaHora(g.pagado_en || g.creado_en)}</p>
               </div>
               <p className="gasto-monto">-${Number(g.monto).toLocaleString('es-AR')}</p>
             </div>
