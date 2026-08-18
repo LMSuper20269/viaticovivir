@@ -321,9 +321,13 @@ export default function App() {
   )
   const saldoRestante = cajasConSaldo.reduce((acc, c) => acc + Number(c.saldo), 0)
 
-  if (vista === 'cerrar-mes')
+  if (vista === 'cerrar-mes') {
+    // Incluye también cajas ya archivadas manualmente durante el mes (además de las activas)
+    const cajasDelMes = [...cajasActivas, ...cajasArchivadas].filter(c => c.mes_id === mesActivo.id)
     return <PantallaCerrarMes mes={mesActivo} saldoRestante={saldoRestante} cajasConSaldo={cajasConSaldo}
+      ingresosMes={ingresosMes} cajasDelMes={cajasDelMes} gastosPorCaja={gastosPorCaja}
       onVolver={() => setVista('mes')} onConfirmar={cerrarMes} />
+  }
 
   if (vista === 'caja-fija-mes')
     return <PantallaCajaFijaMes gastosFijos={gastosFijos} grupo={grupoFijo}

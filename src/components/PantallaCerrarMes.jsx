@@ -2,9 +2,10 @@ import { useState } from 'react'
 
 const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-export default function PantallaCerrarMes({ mes, saldoRestante, cajasConSaldo, onVolver, onConfirmar }) {
+export default function PantallaCerrarMes({ mes, saldoRestante, cajasConSaldo, ingresosMes, cajasDelMes, gastosPorCaja, onVolver, onConfirmar }) {
   const [trasladar, setTrasladar] = useState(true)
   const [cerrando, setCerrando] = useState(false)
+  const [generandoPdf, setGenerandoPdf] = useState(false)
 
   const mesActual = MESES_NOMBRES[mes.mes - 1]
   const proximo = mes.mes === 12 ? 1 : mes.mes + 1
@@ -15,6 +16,16 @@ export default function PantallaCerrarMes({ mes, saldoRestante, cajasConSaldo, o
     setCerrando(true)
     await onConfirmar({ trasladar, saldoRestante })
     setCerrando(false)
+  }
+
+  async function descargarPdf() {
+    setGenerandoPdf(true)
+    try {
+      const { generarPdfCierreMes } = await import('../pdfCierreMes')
+      generarPdfCierreMes({ mes, ingresos: ingresosMes || [], cajas: cajasDelMes || [], gastosPorCaja: gastosPorCaja || {} })
+    } finally {
+      setGenerandoPdf(false)
+    }
   }
 
   return (
@@ -67,6 +78,14 @@ export default function PantallaCerrarMes({ mes, saldoRestante, cajasConSaldo, o
             </button>
           </div>
         )}
+
+        <button onClick={descargarPdf} disabled={generandoPdf} style={{
+          width: '100%', background: 'var(--fondo-card)', color: 'var(--amarillo)',
+          border: '1px solid var(--amarillo)', borderRadius: 12, padding: 14,
+          fontSize: 15, fontWeight: 700, marginBottom: 16
+        }}>
+          {generandoPdf ? 'Generando PDF...' : '📄 Descargar PDF del mes'}
+        </button>
 
         <div style={{ background: '#2a1a1a', borderRadius: 14, padding: 14, marginBottom: 20, border: '1px solid var(--rojo)' }}>
           <p style={{ color: 'var(--rojo)', fontSize: 13, margin: 0 }}>
