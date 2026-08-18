@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onEditarGasto, onConfirmarPago, onCerrarSesion, onVolver, onInicio }) {
+export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, onCerrarCaja, onVerArchivo, onEditarCaja, onEliminarGasto, onEditarGasto, onConfirmarPago, onCerrarSesion, onVolver, onInicio, soloLectura }) {
   const [confirmando, setConfirmando] = useState(null)
   const [montoConfirm, setMontoConfirm] = useState('')
 
@@ -39,11 +39,11 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
       <div className="header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <p className="subt">Caja activa · desde {formatFecha(caja.fecha_inicio)}</p>
+            <p className="subt">{soloLectura ? 'Caja archivada · solo lectura · desde' : 'Caja activa · desde'} {formatFecha(caja.fecha_inicio)}</p>
             <p className="titulo">{caja.descripcion || 'Viatico Vivir'}</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <button onClick={onEditarCaja} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 14, fontWeight: 600, padding: 0 }}>✎ editar</button>
+            {!soloLectura && <button onClick={onEditarCaja} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 14, fontWeight: 600, padding: 0 }}>✎ editar</button>}
             <button onClick={onCerrarSesion} style={{ background: 'none', border: 'none', color: 'var(--gris)', fontSize: 12, padding: 0 }}>⎋ salir</button>
           </div>
         </div>
@@ -79,14 +79,14 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
       </div>
 
       <div className="contenedor">
-        {!agotada && (
+        {!agotada && !soloLectura && (
           <button className="btn-principal" onClick={onAgregarGasto} style={{ marginBottom: 10 }}>
             + Cargar gasto
           </button>
         )}
 
         {/* Modal confirmar pago */}
-        {confirmando && (
+        {!soloLectura && confirmando && (
           <div style={{ background: 'var(--fondo-card)', border: '1px solid var(--amarillo)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
             <p style={{ color: 'var(--amarillo)', fontWeight: 700, fontSize: 15, margin: '0 0 4px' }}>Confirmar pago</p>
             <p style={{ color: 'var(--blanco)', fontSize: 14, margin: '0 0 12px' }}>{confirmando.motivo}</p>
@@ -120,17 +120,21 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
                     <p className="gasto-motivo">{g.motivo}</p>
                     <p className="gasto-meta">Monto estimado: ${Number(g.monto).toLocaleString('es-AR')}</p>
                   </div>
-                  <button onClick={() => abrirConfirmar(g)} style={{
-                    background: 'var(--amarillo)', color: '#1a1a1a', border: 'none',
-                    borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700
-                  }}>
-                    Pagar
-                  </button>
+                  {!soloLectura && (
+                    <button onClick={() => abrirConfirmar(g)} style={{
+                      background: 'var(--amarillo)', color: '#1a1a1a', border: 'none',
+                      borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700
+                    }}>
+                      Pagar
+                    </button>
+                  )}
                 </div>
-                <div style={{ display: 'flex', gap: 12, marginTop: 8, justifyContent: 'flex-end' }}>
-                  <button onClick={() => onEditarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 12, padding: 0 }}>✎ editar monto</button>
-                  <button onClick={() => onEliminarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--rojo)', fontSize: 12, padding: 0 }}>🗑 eliminar</button>
-                </div>
+                {!soloLectura && (
+                  <div style={{ display: 'flex', gap: 12, marginTop: 8, justifyContent: 'flex-end' }}>
+                    <button onClick={() => onEditarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 12, padding: 0 }}>✎ editar monto</button>
+                    <button onClick={() => onEliminarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--rojo)', fontSize: 12, padding: 0 }}>🗑 eliminar</button>
+                  </div>
+                )}
               </div>
             ))}
           </>
@@ -150,16 +154,18 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
               </div>
               <p className="gasto-monto">-${Number(g.monto).toLocaleString('es-AR')}</p>
             </div>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => onEditarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 12, padding: 0 }}>✎ editar</button>
-              <button onClick={() => onEliminarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--rojo)', fontSize: 12, padding: 0 }}>🗑 eliminar</button>
-            </div>
+            {!soloLectura && (
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button onClick={() => onEditarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--amarillo)', fontSize: 12, padding: 0 }}>✎ editar</button>
+                <button onClick={() => onEliminarGasto(g)} style={{ background: 'none', border: 'none', color: 'var(--rojo)', fontSize: 12, padding: 0 }}>🗑 eliminar</button>
+              </div>
+            )}
           </div>
         ))}
 
         <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button className="btn-secundario" onClick={onVerArchivo}>📁 Ver cajas anteriores</button>
-          <button className="btn-peligro" onClick={onCerrarCaja}>Cerrar esta caja</button>
+          {!soloLectura && <button className="btn-peligro" onClick={onCerrarCaja}>Cerrar esta caja</button>}
         </div>
       </div>
     </div>

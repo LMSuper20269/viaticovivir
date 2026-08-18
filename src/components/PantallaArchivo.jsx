@@ -1,4 +1,4 @@
-export default function PantallaArchivo({ cajasArchivadas, onVolver, onReabrir, onEliminarCaja }) {
+export default function PantallaArchivo({ cajasArchivadas, onVolver, onReabrir, onEliminarCaja, onVerDetalle }) {
   return (
     <div>
       <div className="top-bar">
@@ -28,6 +28,12 @@ export default function PantallaArchivo({ cajasArchivadas, onVolver, onReabrir, 
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+              <button
+                onClick={() => onVerDetalle(c)}
+                style={{ flex: 1, background: 'none', color: 'var(--amarillo)', border: '1px solid var(--amarillo)', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700 }}
+              >
+                🔍 Ver detalle
+              </button>
               <button
                 onClick={() => onReabrir(c)}
                 style={{ flex: 1, background: 'var(--amarillo)', color: '#1a1a1a', border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700 }}

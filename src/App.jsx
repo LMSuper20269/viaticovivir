@@ -343,12 +343,16 @@ export default function App() {
 
   if (vista === 'archivo')
     return <PantallaArchivo cajasArchivadas={cajasArchivadas} mesesCerrados={mesesCerrados}
-      onVolver={() => setVista('mes')} onReabrir={reabrirCaja} onEliminarCaja={eliminarCaja} />
+      onVolver={() => setVista('mes')} onReabrir={reabrirCaja} onEliminarCaja={eliminarCaja}
+      onVerDetalle={caja => { setCajaSeleccionada(caja); setVista('caja-detalle') }} />
 
   if (vista === 'caja-detalle' && cajaSeleccionada) {
     const cajaActual = cajasActivas.find(c => c.id === cajaSeleccionada.id) || cajaSeleccionada
+    const soloLectura = cajaActual.estado === 'archivada'
     return <PantallaCaja caja={cajaActual} gastos={gastosPorCaja[cajaActual.id] || []} persona={persona}
-      onVolver={() => setVista('mes')} onInicio={() => setVista('mes')}
+      soloLectura={soloLectura}
+      onVolver={() => setVista(soloLectura ? 'archivo' : 'mes')} onInicio={() => setVista('mes')}
+      onVerArchivo={() => setVista('archivo')}
       onAgregarGasto={() => setVista('nuevo-gasto')}
       onCerrarCaja={() => cerrarCaja(cajaActual)}
       onEditarCaja={() => setVista('editar-caja')}
