@@ -388,6 +388,7 @@ export default function App() {
     onGastosFijos={() => setVista('gastos-fijos')}
     onCajaFijaMes={grupo => { setGrupoFijo(grupo); setVista('caja-fija-mes') }}
     onCerrarMes={() => setVista('cerrar-mes')}
+    onVerArchivo={() => setVista('archivo')}
     onCerrarSesion={cerrarSesion}
     escala={escala}
     onCambiarEscala={cambiarEscala}

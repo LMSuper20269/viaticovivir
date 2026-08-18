@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-export default function PantallaMes({ mes, cajasActivas, gastosPorCaja, ingresosMes, onSeleccionar, onNuevaCaja, onVerBalance, onGastosFijos, onCajaFijaMes, onCerrarMes, onCerrarSesion, escala, onCambiarEscala }) {
+export default function PantallaMes({ mes, cajasActivas, gastosPorCaja, ingresosMes, onSeleccionar, onNuevaCaja, onVerBalance, onGastosFijos, onCajaFijaMes, onCerrarMes, onVerArchivo, onCerrarSesion, escala, onCambiarEscala }) {
 
   const cajasFijasA = cajasActivas.filter(c => c.tipo_caja === 'fija_a')
   const cajasFijasB = cajasActivas.filter(c => c.tipo_caja === 'fija_b')
@@ -110,6 +110,7 @@ export default function PantallaMes({ mes, cajasActivas, gastosPorCaja, ingresos
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button className="btn-secundario" onClick={onVerBalance}>📊 Ver balance detallado</button>
           <button className="btn-secundario" onClick={onGastosFijos}>⚙️ Configurar gastos fijos</button>
+          <button className="btn-secundario" onClick={onVerArchivo}>📁 Ver cajas cerradas</button>
           <button onClick={onCerrarMes} style={{ width: '100%', background: 'transparent', color: 'var(--rojo)', border: '1px solid var(--rojo)', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 600 }}>
             Cerrar {MESES_NOMBRES[mes.mes - 1]} y arrancar nuevo mes
           </button>
