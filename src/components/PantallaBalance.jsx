@@ -18,6 +18,7 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
   const [ingresos, setIngresos] = useState([])
   const [tab, setTab] = useState('resumen')
   const [cargando, setCargando] = useState(false)
+  const [generandoPdf, setGenerandoPdf] = useState(false)
 
   const todosMeses = meses || []
 
@@ -47,10 +48,11 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
   const todasLasCajas = [...cajas]
   const todosGastos = Object.values(gastosPorCaja).flat().filter(g => g.estado !== 'pendiente')
 
+  const cajasDelMesSeleccionado = mesSeleccionado ? todasLasCajas.filter(c => c.mes_id === mesSeleccionado) : []
+
   let gastosFiltrados = []
   if (modo === 'mes' && mesSeleccionado) {
-    const cajasDelMes = todasLasCajas.filter(c => c.mes_id === mesSeleccionado)
-    const idsCajas = cajasDelMes.map(c => c.id)
+    const idsCajas = cajasDelMesSeleccionado.map(c => c.id)
     gastosFiltrados = todosGastos.filter(g => idsCajas.includes(g.caja_id))
   } else if (modo === 'periodo') {
     gastosFiltrados = todosGastos.filter(g => {
@@ -68,6 +70,17 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
   const tituloPeriodo = modo === 'mes' && mesObj
     ? `${MESES_NOMBRES[mesObj.mes - 1]} ${mesObj.año}`
     : modo === 'periodo' ? `${desde.split('-').reverse().join('/')} al ${hasta.split('-').reverse().join('/')}` : ''
+
+  async function descargarPdf() {
+    if (!mesObj) return
+    setGenerandoPdf(true)
+    try {
+      const { generarPdfCierreMes } = await import('../pdfCierreMes')
+      generarPdfCierreMes({ mes: mesObj, ingresos, cajas: cajasDelMesSeleccionado, gastosPorCaja })
+    } finally {
+      setGenerandoPdf(false)
+    }
+  }
 
   return (
     <div>
@@ -151,6 +164,16 @@ export default function PantallaBalance({ gastosPorCaja, cajas, persona, mesActi
             {balance >= 0 ? '✓ Los ingresos superan los gastos' : '⚠ Los gastos superan los ingresos'}
           </p>
         </div>
+
+        {modo === 'mes' && mesObj && (
+          <button onClick={descargarPdf} disabled={generandoPdf} style={{
+            width: '100%', background: 'var(--fondo-card)', color: 'var(--amarillo)',
+            border: '1px solid var(--amarillo)', borderRadius: 12, padding: 12,
+            fontSize: 14, fontWeight: 700, marginBottom: 16
+          }}>
+            {generandoPdf ? 'Generando PDF...' : `📄 Descargar PDF de ${MESES_NOMBRES[mesObj.mes - 1]} ${mesObj.año}`}
+          </button>
+        )}
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>

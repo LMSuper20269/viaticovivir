@@ -122,12 +122,23 @@ export default function App() {
     setPersona(nombre)
   }
 
-  async function crearMesNuevo(saldoTrasladado = 0) {
+  async function crearMesNuevo(saldoTrasladado = 0, mesAnterior = null) {
     const hoy = new Date()
+    // Si viene de cerrar un mes, el nuevo mes es el siguiente al que se cierra
+    // (no el mes calendario de hoy, que puede seguir siendo el mismo si se cierra
+    // antes de fin de mes). Sin mes anterior (primer uso) se usa la fecha de hoy.
+    let año, mes
+    if (mesAnterior) {
+      mes = mesAnterior.mes === 12 ? 1 : mesAnterior.mes + 1
+      año = mesAnterior.mes === 12 ? mesAnterior.año + 1 : mesAnterior.año
+    } else {
+      año = hoy.getFullYear()
+      mes = hoy.getMonth() + 1
+    }
+    const nombre = new Date(año, mes - 1, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+
     const { data } = await supabase.from('meses').insert({
-      nombre: hoy.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }),
-      año: hoy.getFullYear(),
-      mes: hoy.getMonth() + 1,
+      nombre, año, mes,
       estado: 'activo',
       saldo_trasladado: saldoTrasladado,
     }).select().single()
@@ -165,7 +176,7 @@ export default function App() {
     )
     const saldoReal = cajasVariablesConSaldo.reduce((acc, c) => acc + Number(c.saldo), 0)
 
-    await crearMesNuevo(trasladar && saldoReal > 0 ? saldoReal : 0)
+    await crearMesNuevo(trasladar && saldoReal > 0 ? saldoReal : 0, mesActivo)
   }
 
   async function crearCajaFijaMes({ items, total, fecha, grupo, nombreGrupo }) {
@@ -304,7 +315,7 @@ export default function App() {
         </div>
         <div className="contenedor" style={{ paddingTop: 24 }}>
           <p style={{ color: 'var(--gris)', marginBottom: 16 }}>No hay un mes activo. Arrancá el nuevo mes.</p>
-          <button className="btn-principal" onClick={() => crearMesNuevo(0)}>+ Arrancar nuevo mes</button>
+          <button className="btn-principal" onClick={() => crearMesNuevo(0, mesesCerrados[0] || null)}>+ Arrancar nuevo mes</button>
           {mesesCerrados.length > 0 && (
             <button className="btn-secundario" style={{ marginTop: 10 }} onClick={() => setVista('archivo')}>
               📁 Ver meses anteriores
