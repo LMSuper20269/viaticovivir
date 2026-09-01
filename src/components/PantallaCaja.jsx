@@ -118,7 +118,8 @@ export default function PantallaCaja({ caja, gastos, persona, onAgregarGasto, on
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <p className="gasto-motivo">{g.motivo}</p>
-                    <p className="gasto-meta">Monto estimado: ${Number(g.monto).toLocaleString('es-AR')}</p>
+                    <p className="gasto-meta" style={{ margin: '4px 0 2px' }}>Monto estimado:</p>
+                    <p className="gasto-motivo" style={{ margin: 0 }}>${Number(g.monto).toLocaleString('es-AR')}</p>
                   </div>
                   {!soloLectura && (
                     <button onClick={() => abrirConfirmar(g)} style={{
